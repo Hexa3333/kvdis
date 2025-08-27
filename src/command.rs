@@ -41,8 +41,7 @@ impl FromStr for Command {
                 } else {
                     Ok(Del(words[1].to_string()))
                 }
-            }
-
+            },
             "EXISTS" => {
                 if words.len() != 2 {
                     return Err(ParseError::InvalidParameters);
@@ -50,7 +49,6 @@ impl FromStr for Command {
                     Ok(Exists(words[1].to_string()))
                 }
             }
-
             "EXPIRE" => {
                 if words.len() != 3 {
                     return Err(ParseError::InvalidParameters);
@@ -60,6 +58,20 @@ impl FromStr for Command {
                     })?.into()))
                 }
             }
+            "INCR" => {
+                if words.len() != 2 {
+                    return Err(ParseError::InvalidParameters);
+                } else {
+                    Ok(Incr(words[1].to_string()))
+                }
+            }
+            "DECR" => {
+                if words.len() != 2 {
+                    return Err(ParseError::InvalidParameters);
+                } else {
+                    Ok(Decr(words[1].to_string()))
+                }
+            }
 
             _ => Err(ParseError::NotACommand)
         }
@@ -67,7 +79,7 @@ impl FromStr for Command {
 }
 
 #[cfg(test)]
-mod tests {
+mod parsing {
     use super::*;
 
     #[test]
