@@ -1,11 +1,11 @@
 // How do we handle the memory allocation?
 
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, time::{SystemTime, Duration}};
 
 #[derive(Debug)]
 pub struct Entry {
     pub value: String,
-    pub lifetime: Option<Duration>
+    pub expiration: Option<SystemTime>
 }
 
 #[derive(Debug)]
@@ -37,9 +37,11 @@ impl Dictionary {
         self.map.get(key).is_some()
     }
 
-    pub fn expire(&mut self, key: &str, time: Duration) {
+    pub fn expire(&mut self, key: &str, lifetime: Duration) {
         match self.map.get_mut(key) {
-            Some(entry) => entry.lifetime = Some(time),
+            Some(entry) => {
+                entry.expiration = Some(SystemTime::now() + lifetime)
+            },
             // TODO
             None => {}
         }
