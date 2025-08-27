@@ -10,17 +10,8 @@
 */
 
 use crate::errors::ParseError;
+use crate::command::CommandType;
 
-
-#[derive(Debug)]
-enum CommandType {
-    Set,
-    Get,
-    Del,
-    Exists,
-    Expire,
-    Incr, Decr
-}
 
 /// Ensures line is a valid command
 pub fn parse_line_to_command(line: &str) -> Result<(), ParseError> {
