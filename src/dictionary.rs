@@ -1,5 +1,3 @@
-// How do we handle the memory allocation?
-
 use std::{collections::HashMap, time::{SystemTime, Duration}};
 
 #[derive(Debug)]
