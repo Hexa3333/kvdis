@@ -1,5 +1,5 @@
-use kvdis::query;
+use kvdis::commmand;
 
 fn main() {
-    query::parse_line_to_command("SET key value").unwrap();
+    commmand::parse_line_to_command("SET key value").unwrap();
 }
