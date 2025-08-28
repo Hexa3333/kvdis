@@ -21,7 +21,8 @@ impl Dictionary {
     }
 
     /// ### Since all the error checking is done in parsing time, commands should never fail
-    /// ## Returns the command result wrapped in `command::CommandResult`
+    /// # Returns 
+    /// The command result wrapped in `command::CommandResult`
     pub fn run(&mut self, command: Command) -> Option<CommandResult> {
         use Command::*;
         match command {
@@ -58,9 +59,20 @@ impl Dictionary {
         self.map.insert(key, value);
     }
 
+    /// Gets the value mapped to `key` returns `Some(String)`
+    /// If not found or expired, returns `None`
     pub fn get(&self, key: &str) -> Option<String> {
         match self.map.get(key) {
-            Some(e) => Some(e.value.clone()),
+            Some(e) => {
+                // Check if expired
+                if let Some(lifetime) = e.expiration {
+                    if lifetime <= SystemTime::now() {
+                        return None;
+                    }
+                }
+
+                Some(e.value.clone())
+            },
             None => None
         }
     }
@@ -119,6 +131,26 @@ mod commands {
         assert_eq!(dict.run(set_command), Some(CommandResult::Set));
         let got = dict.run(get_command);
         assert_eq!(got, Some(CommandResult::Get("19".to_string())));
+    }
+
+    #[test]
+    fn get_set_already_expired() {
+        let mut dict = Dictionary::new();
+
+        let set_command = "SET metanoia 19".to_string().parse::<Command>().unwrap();
+        // expire in 1 second
+        let expire_command = "EXPIRE metanoia 1s".parse::<Command>().unwrap();
+        let get_command = "GET metanoia".to_string().parse::<Command>().unwrap();
+
+        dict.run(set_command);
+        dict.run(expire_command);
+
+        // sleep for 2 seconds
+        std::thread::sleep(Duration::from_secs(2));
+
+        // Should not be able to get it because expired
+        let got = dict.run(get_command);
+        assert_eq!(got, None);
     }
 
     #[test]
