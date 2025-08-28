@@ -50,10 +50,19 @@ impl FromStr for Command {
                 }
             }
             "EXPIRE" => {
-                if words.len() != 3 {
+                // NOTE: humantime format is standard.
+                if words.len() < 3 || words.len() > 5 {
                     return Err(ParseError::InvalidParameters);
                 } else {
-                    Ok(Expire(words[1].to_string(), words[2].parse::<humantime::Duration>().map_err(|_e| {
+                    let humantime_part = match words.get(2..) {
+                        Some(humantime_part) => humantime_part,
+                        None => {
+                            return Err(ParseError::InvalidParameters);
+                        }
+                    };
+                    let humantime_string = humantime_part.join(" ");
+
+                    Ok(Expire(words[1].to_string(), humantime_string.parse::<humantime::Duration>().map_err(|_e| {
                         ParseError::InvalidParameters
                     })?.into()))
                 }
@@ -134,9 +143,8 @@ mod parsing {
     #[test]
     fn expire_multiple_var() {
         let key = "metanoia";
-        //let duration = "1h 27m 13s".parse::<humantime::Duration>().unwrap();
 
-        let com = String::from("EXISTS ") + key + " 1h 27m 13s";
+        let com = String::from("EXPIRE ") + key + " 1h 27m 13s";
         let com = com.parse::<Command>();
 
         // 1h 27m 13s is 5223 seconds
