@@ -20,6 +20,7 @@ impl Dictionary {
         Dictionary { map: HashMap::new() }
     }
 
+    /// Runs a `Command`
     /// ### Since all the error checking is done in parsing time, commands should never fail
     /// # Returns 
     /// The command result wrapped in `command::CommandResult`

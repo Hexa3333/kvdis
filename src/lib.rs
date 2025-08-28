@@ -1,4 +1,6 @@
 //! kvdis
+//! A relational map of Strings
+//! - Still haven't decided how text GET and EXISTS calls should process or do whatever.
 
 pub mod command;
 pub mod parsing;
