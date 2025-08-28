@@ -13,6 +13,8 @@ pub struct Dictionary {
     map: HashMap<String, Entry>
 }
 
+/// Treats everything as a String,
+/// `incr` and `decr` operations work on parsable i64 bound Strings
 impl Dictionary {
     pub fn new() -> Self {
         Dictionary { map: HashMap::new() }
@@ -41,13 +43,13 @@ impl Dictionary {
                 self.expire(&key, lifetime);
                 Some(CommandResult::Expire)
             },
-            Incr(_key) => {
-                todo!();
-                //Some(CommandResult::Incr)
+            Incr(key) => {
+                self.incr(&key);
+                Some(CommandResult::Incr)
             },
-            Decr(_key) => {
-                todo!();
-                //Some(CommandResult::Decr)
+            Decr(key) => {
+                self.decr(&key);
+                Some(CommandResult::Decr)
             }
         }
     }
@@ -74,15 +76,33 @@ impl Dictionary {
     pub fn expire(&mut self, key: &str, lifetime: Duration) {
         match self.map.get_mut(key) {
             Some(entry) => {
-                entry.expiration = Some(SystemTime::now() + lifetime)
+                entry.expiration = Some(SystemTime::now() + lifetime);
             },
             // TODO
             None => {}
         }
     }
 
-    //pub fn incr(&mut self, key: &str);
-    //pub fn decr(&mut self, key: &str);
+    // NOTE: use custom functions instead of working on the map directly
+
+    pub fn incr(&mut self, key: &str) {
+        // TODO yeah... Best look for a way to handle this
+        let old_val = self.get(&key).unwrap().parse::<i64>().unwrap();
+        let new_val = old_val + 1;
+        self.set(key.to_string(), Entry {
+            value: new_val.to_string(),
+            expiration: None
+        });
+    }
+    pub fn decr(&mut self, key: &str) {
+        // TODO yeah... Best look for a way to handle this
+        let old_val = self.get(&key).unwrap().parse::<i64>().unwrap();
+        let new_val = old_val - 1;
+        self.set(key.to_string(), Entry {
+            value: new_val.to_string(),
+            expiration: None
+        });
+    }
 }
 
 #[cfg(test)]
@@ -99,5 +119,39 @@ mod commands {
         assert_eq!(dict.run(set_command), Some(CommandResult::Set));
         let got = dict.run(get_command);
         assert_eq!(got, Some(CommandResult::Get("19".to_string())));
+    }
+
+    #[test]
+    fn incr() {
+        let mut dict = Dictionary::new();
+
+        let set_command = "SET something 5".parse::<Command>().unwrap();
+        let incr_command = "INCR something".parse::<Command>().unwrap();
+
+        dict.run(set_command);
+
+        // Check that it is indeed that command
+        assert_eq!(dict.run(incr_command), Some(CommandResult::Incr));
+
+        // Check that it worked (5+1 = 6)
+        let get_command = "GET something".parse::<Command>().unwrap();
+        assert_eq!(dict.run(get_command), Some(CommandResult::Get("6".to_string())));
+    }
+
+    #[test]
+    fn decr() {
+        let mut dict = Dictionary::new();
+
+        let set_command = "SET something -5".parse::<Command>().unwrap();
+        let decr_command = "DECR something".parse::<Command>().unwrap();
+
+        dict.run(set_command);
+
+        // Check that it is indeed that command
+        assert_eq!(dict.run(decr_command), Some(CommandResult::Decr));
+
+        // Check that it worked (-5-1 = -6)
+        let get_command = "GET something".parse::<Command>().unwrap();
+        assert_eq!(dict.run(get_command), Some(CommandResult::Get("-6".to_string())));
     }
 }
