@@ -134,7 +134,7 @@ mod commands {
     }
 
     #[test]
-    fn get_set_already_expired() {
+    fn get_set_expired() {
         let mut dict = Dictionary::new();
 
         let set_command = "SET metanoia 19".to_string().parse::<Command>().unwrap();
@@ -145,10 +145,15 @@ mod commands {
         dict.run(set_command);
         dict.run(expire_command);
 
+        // Not expired yet; should be Some
+        let got = dict.run(get_command);
+        assert_eq!(got, Some(CommandResult::Get("19".to_string())));
+
         // sleep for 2 seconds
         std::thread::sleep(Duration::from_secs(2));
 
-        // Should not be able to get it because expired
+        // Expired; should be None
+        let get_command = "GET metanoia".to_string().parse::<Command>().unwrap();
         let got = dict.run(get_command);
         assert_eq!(got, None);
     }
