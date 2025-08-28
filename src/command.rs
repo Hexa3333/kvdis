@@ -6,8 +6,18 @@ pub enum Command {
     Get(String),
     Del(String),
     Exists(String),
-    // TODO: humantime can have more than 1 argument!!!!!!!!!! (ex. 5h 5m 5s)
     Expire(String, Duration),
     Incr(String),
     Decr(String)
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum CommandResult {
+    Set,
+    Get(String),
+    Del,
+    Exists(bool),
+    Expire,
+    Incr,
+    Decr
 }
