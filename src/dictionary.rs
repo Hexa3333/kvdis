@@ -172,6 +172,15 @@ mod commands {
     }
 
     #[test]
+    fn get_doesnt_exist() {
+        let mut dict = Dictionary::new();
+
+        let get_command = "GET metanoia".to_string().parse::<Command>().unwrap();
+        let got = dict.run(get_command);
+        assert_eq!(got, Err(DictionaryError::DoesNotExist));
+    }
+
+    #[test]
     fn incr() {
         let mut dict = Dictionary::new();
 
