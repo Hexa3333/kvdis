@@ -1,4 +1,4 @@
-use std::{time::{Duration, SystemTime}};
+use std::{fs, time::{Duration, SystemTime}};
 
 use kvdis::{command::Command, dictionary::{Dictionary, Entry}};
 
@@ -29,6 +29,8 @@ fn main() {
     dbg!(dict.get("something").unwrap());
     dbg!(dict.exists("something"));
 
+    let html = dict.dump_html();
+    fs::write("./dump.html", html).unwrap();
 
     //loop {
     //    let mut line = String::new();

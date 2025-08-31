@@ -1,4 +1,4 @@
-use std::{collections::HashMap, time::{SystemTime, Duration}};
+use std::{collections::HashMap, time::{Duration, SystemTime}};
 
 use crate::{command::{Command, CommandResult}, errors::DictionaryError};
 
@@ -127,6 +127,72 @@ impl Dictionary {
         }
 
         v
+    }
+
+
+    pub fn dump_html(&self) -> String {
+        let html = "\
+<!DOCTYPE html>
+  <head>
+    <meta charset=\"UTF-8\">
+    <title>kvdis</title>
+  <style>
+    body {
+        background-color:#4f7696;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 8px;
+    }
+
+     td:nth-child(even), th:nth-child(even) {
+      background-color: #D6EEEE;
+    }
+  </style>
+  </head>
+
+  <body>
+      <table>
+DICTIONARY
+      </table>
+  </body>
+</html>
+".to_string();
+
+        /* Each pair should be like so:
+        <tr>
+            <td>{key}</td>
+            <td>{value}</td>
+            <td>{expiration}</td>
+        </tr
+         */
+        let contents: String = self.map.iter()
+            .map(|kv| {
+                if let Some(expiration) = kv.1.expiration {
+                    let expiration = humantime::format_rfc3339_seconds(expiration).to_string();
+
+                    String::from(format!(
+                            "<tr><td>{}</td><td>{}</td><td>{}</td></tr>",
+                            kv.0,
+                            kv.1.value,
+                            expiration
+                            ))
+                } else {
+                    String::from(format!(
+                            "<tr><td>{}</td><td>{}</td></tr>",
+                            kv.0,
+                            kv.1.value,
+                            ))
+                }
+            })
+            .collect();
+
+        html.replace("DICTIONARY", &contents)
     }
 }
 
