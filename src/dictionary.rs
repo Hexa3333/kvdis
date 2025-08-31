@@ -109,6 +109,7 @@ impl Dictionary {
             expiration: None
         });
     }
+
     pub fn decr(&mut self, key: &str) {
         // TODO yeah... Best look for a way to handle this
         let old_val = self.get(&key).unwrap().parse::<i64>().unwrap();
@@ -117,6 +118,15 @@ impl Dictionary {
             value: new_val.to_string(),
             expiration: None
         });
+    }
+
+    pub fn get_paired(&self) -> Vec<(&str, &Entry)> {
+        let mut v = Vec::new();
+        for (key, val) in self.map.iter() {
+            v.push((&key[..], val));
+        }
+
+        v
     }
 }
 
