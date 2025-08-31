@@ -176,18 +176,18 @@ DICTIONARY
                 if let Some(expiration) = kv.1.expiration {
                     let expiration = humantime::format_rfc3339_seconds(expiration).to_string();
 
-                    String::from(format!(
+                    format!(
                             "<tr><td>{}</td><td>{}</td><td>{}</td></tr>",
                             kv.0,
                             kv.1.value,
                             expiration
-                            ))
+                            )
                 } else {
-                    String::from(format!(
+                    format!(
                             "<tr><td>{}</td><td>{}</td></tr>",
                             kv.0,
                             kv.1.value,
-                            ))
+                            )
                 }
             })
             .collect();
