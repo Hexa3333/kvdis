@@ -1,6 +1,6 @@
 use std::{time::{Duration, SystemTime}};
 
-use kvdis::{dictionary::{Dictionary, Entry}};
+use kvdis::{command::Command, dictionary::{Dictionary, Entry}};
 
 fn main() {
     //commmand::parse_line_to_command("SET key value").unwrap();
@@ -21,6 +21,14 @@ fn main() {
     });
 
     dict.expire("3", Duration::from_secs(3));
+
+    let set_command = "SET something whatevs".parse::<Command>().unwrap();
+    let get_command = "GET something".parse::<Command>().unwrap();
+    dict.run(set_command).unwrap();
+    dict.run(get_command).unwrap();
+    dbg!(dict.get("something").unwrap());
+    dbg!(dict.exists("something"));
+
 
     //loop {
     //    let mut line = String::new();
