@@ -3,6 +3,8 @@ use std::{fs, time::{Duration, SystemTime}};
 use kvdis::{command::Command, dictionary::{Dictionary, Entry}};
 use sap::{Parser, Argument};
 
+const DEFAULT_PORT: u16 = 1453;
+
 fn main() {
     let mut parser = Parser::from_env().unwrap();
 
@@ -11,7 +13,10 @@ fn main() {
     while let Some(arg) = parser.forward().unwrap() {
         match arg {
             Argument::Long("port") => {
-                _port = parser.value().unwrap().parse().unwrap();
+                _port = parser.value().unwrap().parse().unwrap_or_else(|_e| {
+                    eprintln!("Port could not be parsed, reverting to default...");
+                    DEFAULT_PORT
+                });
             }
 
             _ => panic!("Invalid argument!")
