@@ -1,9 +1,22 @@
 use std::{fs, time::{Duration, SystemTime}};
 
 use kvdis::{command::Command, dictionary::{Dictionary, Entry}};
+use sap::{Parser, Argument};
 
 fn main() {
-    //commmand::parse_line_to_command("SET key value").unwrap();
+    let mut parser = Parser::from_env().unwrap();
+
+    let mut _port: u16;
+
+    while let Some(arg) = parser.forward().unwrap() {
+        match arg {
+            Argument::Long("port") => {
+                _port = parser.value().unwrap().parse().unwrap();
+            }
+
+            _ => panic!("Invalid argument!")
+        }
+    }
 
     let mut dict = Dictionary::new();
 
