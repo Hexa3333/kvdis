@@ -1,7 +1,8 @@
 #[derive(Debug, PartialEq, Eq)]
 pub enum ParseError {
     InvalidParameters,
-    NotACommand
+    NotACommand,
+    IsEmpty
 }
 
 #[derive(Debug, PartialEq, Eq)]

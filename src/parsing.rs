@@ -4,8 +4,12 @@ use crate::command::Command;
 
 impl FromStr for Command {
     type Err = ParseError;
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let words: Vec<&str> = s.split_whitespace().collect();
+        if words.len() == 0 {
+            return Err(ParseError::IsEmpty);
+        }
 
         use Command::*;
         match words[0] {

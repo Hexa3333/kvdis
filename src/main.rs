@@ -1,6 +1,6 @@
 use std::{fs, time::{Duration, SystemTime}};
 
-use kvdis::{command::Command, dictionary::{Dictionary, Entry}};
+use kvdis::{command::{Command, CommandResult}, dictionary::{Dictionary, Entry}, errors::{DictionaryError, ParseError}};
 use sap::{Parser, Argument};
 
 const DEFAULT_PORT: u16 = 1453;
@@ -44,21 +44,64 @@ fn main() {
     let get_command = "GET something".parse::<Command>().unwrap();
     dict.run(set_command).unwrap();
     dict.run(get_command).unwrap();
-    dbg!(dict.get("something").unwrap());
-    dbg!(dict.exists("something"));
 
     let html = dict.dump_html();
     fs::write("./dump.html", html).unwrap();
 
-    //loop {
-    //    let mut line = String::new();
-    //    match io::stdin().read_line(&mut line) {
-    //        Ok(_n_read) => {},
-    //        Err(e) => {
-    //            eprintln!("Could not read from stdin: {e}");
-    //            continue;
-    //        }
-    //    };
+    loop {
+        let mut line = String::new();
+        match std::io::stdin().read_line(&mut line) {
+            Err(e) => {
+                eprintln!("Could not read from stdin: {e}");
+                continue;
+            },
 
-    //}
+            Ok(_n_read) => {
+                match line.parse::<Command>() {
+                    Err(e) => {
+                        match e {
+                            ParseError::NotACommand => {
+                                eprintln!("Not a command!");
+                            },
+                            ParseError::InvalidParameters => {
+                                eprintln!("Command parameters are invalid!");
+                            },
+                            ParseError::IsEmpty => {}
+                        }
+
+                        continue;
+                    }
+
+                    Ok(com) => {
+                        match dict.run(com) {
+                            Err(e) => {
+                                match e {
+                                    DictionaryError::DoesNotExist => {
+                                        eprintln!("Key does not exist.");
+                                    },
+                                    DictionaryError::IsExpired => {
+                                        eprintln!("Key has expired.");
+                                    }
+                                };
+                                continue;
+                            }
+
+                            Ok(ret) => {
+                                match ret {
+                                    CommandResult::Get(got) => {
+                                        println!("{got}");
+                                    },
+                                    CommandResult::Exists(check) => {
+                                        println!("{check}");
+                                    }
+
+                                    _ => {}
+                                }
+                            }
+                        };
+                    }
+                };
+            }
+        };
+    }
 }
