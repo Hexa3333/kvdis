@@ -21,3 +21,20 @@ pub enum CommandResult {
     Incr,
     Decr
 }
+
+impl ToString for CommandResult {
+    fn to_string(&self) -> String {
+        match self {
+            CommandResult::Get(got) => {
+                got.to_string()
+            },
+            CommandResult::Exists(check) => {
+                check.to_string()
+            }
+
+            _ => {
+                "".to_string()
+            }
+        }
+    }
+}

@@ -1,6 +1,6 @@
-use std::{fs, time::{Duration, SystemTime}};
+use std::{time::{Duration, SystemTime}};
 
-use kvdis::{command::{Command, CommandResult}, connection::{accept, bind}, dictionary::{Dictionary, Entry}, errors::{DictionaryError, ParseError}};
+use kvdis::{command::{Command}, connection::{accept, bind}, dictionary::{Dictionary, Entry}};
 use sap::{Parser, Argument};
 
 const DEFAULT_PORT: u16 = 1453;
@@ -62,31 +62,10 @@ fn cli(dict: &mut Dictionary) {
                     }
 
                     Ok(com) => {
-                        println!("{}", handle_command(dict, com));
+                        println!("{}", dict.run(com));
                     }
                 };
             }
         };
-    }
-}
-
-fn handle_command(dict: &mut Dictionary, com: Command) -> String {
-    match dict.run(com) {
-        Err(e) => e.to_string(),
-
-        Ok(ret) => {
-            match ret {
-                CommandResult::Get(got) => {
-                    got
-                },
-                CommandResult::Exists(check) => {
-                    check.to_string()
-                }
-
-                _ => {
-                    "".to_string()
-                }
-            }
-        }
     }
 }

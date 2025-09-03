@@ -29,6 +29,6 @@ pub fn accept(dict: &mut Dictionary, listener: &TcpListener) {
 
         // TODO: Error handling (external to module)
         let command = command.parse::<Command>().unwrap();
-        dict.run(command).unwrap();
+        dict.run_headless(command).unwrap();
     }
 }

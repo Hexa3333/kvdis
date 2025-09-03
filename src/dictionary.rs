@@ -24,7 +24,7 @@ impl Dictionary {
     /// ### Since all the error checking is done in parsing time, commands should never fail
     /// # Returns 
     /// The command result wrapped in `command::CommandResult`
-    pub fn run(&mut self, command: Command) -> Result<CommandResult, DictionaryError> {
+    pub fn run_headless(&mut self, command: Command) -> Result<CommandResult, DictionaryError> {
         use Command::*;
         match command {
             Set(key, value) => {
@@ -53,6 +53,13 @@ impl Dictionary {
                 self.decr(&key);
                 Ok(CommandResult::Decr)
             }
+        }
+    }
+
+    pub fn run(&mut self, command: Command) -> String {
+        match self.run_headless(command) {
+            Err(e) => e.to_string(),
+            Ok(ret) => ret.to_string()
         }
     }
 
@@ -207,8 +214,8 @@ mod commands {
         let set_command = "SET metanoia 19".to_string().parse::<Command>().unwrap();
         let get_command = "GET metanoia".to_string().parse::<Command>().unwrap();
 
-        assert_eq!(dict.run(set_command), Ok(CommandResult::Set));
-        let got = dict.run(get_command);
+        assert_eq!(dict.run_headless(set_command), Ok(CommandResult::Set));
+        let got = dict.run_headless(get_command);
         assert_eq!(got, Ok(CommandResult::Get("19".to_string())));
     }
 
@@ -221,11 +228,11 @@ mod commands {
         let expire_command = "EXPIRE metanoia 1s".parse::<Command>().unwrap();
         let get_command = "GET metanoia".to_string().parse::<Command>().unwrap();
 
-        dict.run(set_command).unwrap();
-        dict.run(expire_command).unwrap();
+        dict.run_headless(set_command).unwrap();
+        dict.run_headless(expire_command).unwrap();
 
         // Not expired yet; should be Some
-        let got = dict.run(get_command);
+        let got = dict.run_headless(get_command);
         assert_eq!(got, Ok(CommandResult::Get("19".to_string())));
 
         // sleep for 2 seconds
@@ -233,7 +240,7 @@ mod commands {
 
         // Expired; should be None
         let get_command = "GET metanoia".to_string().parse::<Command>().unwrap();
-        let got = dict.run(get_command);
+        let got = dict.run_headless(get_command);
         assert_eq!(got, Err(DictionaryError::IsExpired));
     }
 
@@ -242,7 +249,7 @@ mod commands {
         let mut dict = Dictionary::new();
 
         let get_command = "GET metanoia".to_string().parse::<Command>().unwrap();
-        let got = dict.run(get_command);
+        let got = dict.run_headless(get_command);
         assert_eq!(got, Err(DictionaryError::DoesNotExist));
     }
 
@@ -253,14 +260,14 @@ mod commands {
         let set_command = "SET something 5".parse::<Command>().unwrap();
         let incr_command = "INCR something".parse::<Command>().unwrap();
 
-        dict.run(set_command).unwrap();
+        dict.run_headless(set_command).unwrap();
 
         // Check that it is indeed that command
-        assert_eq!(dict.run(incr_command), Ok(CommandResult::Incr));
+        assert_eq!(dict.run_headless(incr_command), Ok(CommandResult::Incr));
 
         // Check that it worked (5+1 = 6)
         let get_command = "GET something".parse::<Command>().unwrap();
-        assert_eq!(dict.run(get_command), Ok(CommandResult::Get("6".to_string())));
+        assert_eq!(dict.run_headless(get_command), Ok(CommandResult::Get("6".to_string())));
     }
 
     #[test]
@@ -270,13 +277,13 @@ mod commands {
         let set_command = "SET something -5".parse::<Command>().unwrap();
         let decr_command = "DECR something".parse::<Command>().unwrap();
 
-        dict.run(set_command).unwrap();
+        dict.run_headless(set_command).unwrap();
 
         // Check that it is indeed that command
-        assert_eq!(dict.run(decr_command), Ok(CommandResult::Decr));
+        assert_eq!(dict.run_headless(decr_command), Ok(CommandResult::Decr));
 
         // Check that it worked (-5-1 = -6)
         let get_command = "GET something".parse::<Command>().unwrap();
-        assert_eq!(dict.run(get_command), Ok(CommandResult::Get("-6".to_string())));
+        assert_eq!(dict.run_headless(get_command), Ok(CommandResult::Get("-6".to_string())));
     }
 }
