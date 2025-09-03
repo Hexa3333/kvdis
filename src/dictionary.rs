@@ -46,7 +46,7 @@ impl Dictionary {
                 Ok(CommandResult::Expire)
             },
             Incr(key) => {
-                self.incr(&key);
+                self.incr(&key)?;
                 Ok(CommandResult::Incr)
             },
             Decr(key) => {
@@ -105,16 +105,21 @@ impl Dictionary {
         }
     }
 
-    // NOTE: use custom functions instead of working on the map directly
+    pub fn incr(&mut self, key: &str) -> Result<(), DictionaryError> {
+        let old_val = match self.get(&key).unwrap().parse::<i64>() {
+            Err(_) => {
+                return Err(DictionaryError::InvalidOperationType);
+            },
+            Ok(v) => v
+        };
 
-    pub fn incr(&mut self, key: &str) {
-        // TODO yeah... Best look for a way to handle this
-        let old_val = self.get(&key).unwrap().parse::<i64>().unwrap();
         let new_val = old_val + 1;
         self.set(key.to_string(), Entry {
             value: new_val.to_string(),
             expiration: None
         });
+
+        Ok(())
     }
 
     pub fn decr(&mut self, key: &str) {

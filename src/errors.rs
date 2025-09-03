@@ -8,7 +8,8 @@ pub enum ParseError {
 #[derive(Debug, PartialEq, Eq)]
 pub enum DictionaryError {
     DoesNotExist,
-    IsExpired
+    IsExpired,
+    InvalidOperationType
 }
 
 impl ToString for ParseError {
@@ -35,6 +36,9 @@ impl ToString for DictionaryError {
             },
             DictionaryError::IsExpired => {
                 "Key has expired.".to_string()
+            },
+            DictionaryError::InvalidOperationType => {
+                "This operation is not defined on value type.".to_string()
             }
         }
     }
