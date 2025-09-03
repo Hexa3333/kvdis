@@ -2,10 +2,19 @@ use std::{io::{Read}, net::{TcpListener}};
 
 use crate::{command::Command, dictionary::Dictionary};
 
+type Port = u16;
+const DEFAULT_PORT_STR: &str = "7777";
+
 // TODO: binding logic for spec ports and error handling
-pub fn bind() -> TcpListener {
-    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
-    listener
+pub fn bind(port: Option<Port>) -> TcpListener {
+    match port {
+        Some(port) => {
+            TcpListener::bind(format!("127.0.0.1:{port}")).unwrap()
+        }
+        None => {
+            TcpListener::bind(format!("127.0.0.1:{}", DEFAULT_PORT_STR)).unwrap()
+        }
+    }
 }
 
 pub fn accept(dict: &mut Dictionary, listener: &TcpListener) {
