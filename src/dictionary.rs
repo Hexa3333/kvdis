@@ -50,7 +50,7 @@ impl Dictionary {
                 Ok(CommandResult::Incr)
             },
             Decr(key) => {
-                self.decr(&key);
+                self.decr(&key)?;
                 Ok(CommandResult::Decr)
             }
         }
@@ -122,14 +122,21 @@ impl Dictionary {
         Ok(())
     }
 
-    pub fn decr(&mut self, key: &str) {
-        // TODO yeah... Best look for a way to handle this
-        let old_val = self.get(&key).unwrap().parse::<i64>().unwrap();
+    pub fn decr(&mut self, key: &str) -> Result<(), DictionaryError> {
+        let old_val = match self.get(&key).unwrap().parse::<i64>() {
+            Err(_) => {
+                return Err(DictionaryError::InvalidOperationType);
+            },
+            Ok(v) => v
+        };
+
         let new_val = old_val - 1;
         self.set(key.to_string(), Entry {
             value: new_val.to_string(),
             expiration: None
         });
+
+        Ok(())
     }
 
     pub fn get_paired(&self) -> Vec<(&str, &Entry)> {
