@@ -40,7 +40,7 @@ fn main() {
 
     dict.expire("3", Duration::from_secs(3));
 
-    run(&mut dict, &bind(None));
+    run(&mut dict, &bind(None)).unwrap();
 }
 
 fn _cli(dict: &mut Dictionary) {

@@ -1,4 +1,4 @@
-use std::{io::{BufRead, BufReader, BufWriter, Write}, net::{TcpListener}};
+use std::{io::{self, BufRead, BufReader, BufWriter, Write}, net::TcpListener};
 
 use crate::{command::Command, dictionary::Dictionary};
 
@@ -23,9 +23,9 @@ pub fn bind(port: Option<Port>) -> TcpListener {
 
 /// # Half-duplex connection
 /// Commands are received, processed, and responded to.
-pub fn run(dict: &mut Dictionary, listener: &TcpListener) {
+pub fn run(dict: &mut Dictionary, listener: &TcpListener) -> io::Result<()> {
     for stream in listener.incoming() {
-        let stream = stream.unwrap();
+        let stream = stream?;
         let mut reader = BufReader::new(&stream);
         let mut writer = BufWriter::new(&stream);
 
@@ -35,11 +35,17 @@ pub fn run(dict: &mut Dictionary, listener: &TcpListener) {
         let command = match command.parse::<Command>() {
             Ok(com) => com,
             Err(e) => {
-                panic!("{}", e.to_string());
+                writer.write_all(format!(
+                        "[Error]: {}", e.to_string()
+                        )
+                    .as_bytes())?;
+                continue;
             }
         };
 
         let result = dict.run(command);
-        writer.write_all(result.as_bytes()).unwrap();
+        writer.write_all(result.as_bytes())?;
     }
+
+    Ok(())
 }
