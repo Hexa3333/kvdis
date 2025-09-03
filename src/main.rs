@@ -1,46 +1,32 @@
-use std::{time::{Duration, SystemTime}};
-
+use std::process;
 use kvdis::{command::{Command}, connection::{run, bind}, dictionary::{Dictionary, Entry}};
 use sap::{Parser, Argument};
 
-const DEFAULT_PORT: u16 = 1453;
+const DEFAULT_PORT: u16 = 7777;
 
 fn main() {
     let mut parser = Parser::from_env().unwrap();
 
-    let mut _port: u16;
+    let mut port: u16 = DEFAULT_PORT;
 
     while let Some(arg) = parser.forward().unwrap() {
         match arg {
             Argument::Long("port") => {
-                _port = parser.value().unwrap().parse().unwrap_or_else(|_e| {
+                port = parser.value().unwrap().parse().unwrap_or_else(|_e| {
                     eprintln!("Port could not be parsed, reverting to default...");
                     DEFAULT_PORT
                 });
             }
 
-            _ => panic!("Invalid argument!")
+            _ => {
+                eprintln!("Invalid arguments! Exiting...");
+                process::exit(-1);
+            }
         }
     }
 
     let mut dict = Dictionary::new();
-
-    dict.set(String::from("1"), Entry {
-        value: String::from("bir"),
-        expiration: None
-    });
-    dict.set(String::from("2"), Entry {
-        value: String::from("iki"),
-        expiration: None
-    });
-    dict.set(String::from("3"), Entry {
-        value: String::from("üç"),
-        expiration: Some(SystemTime::now() + Duration::from_secs(5))
-    });
-
-    dict.expire("3", Duration::from_secs(3));
-
-    run(&mut dict, &bind(None)).unwrap();
+    run(&mut dict, &bind(Some(port))).unwrap();
 }
 
 fn _cli(dict: &mut Dictionary) {
