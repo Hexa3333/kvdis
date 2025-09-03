@@ -1,11 +1,10 @@
-use std::{io::{self, Read}, net::TcpListener};
+use std::{io::{BufRead, BufReader, BufWriter, Write}, net::{TcpListener}};
 
 use crate::{command::Command, dictionary::Dictionary};
 
 type Port = u16;
 const DEFAULT_PORT_STR: &str = "7777";
 
-// TODO: binding logic for spec ports and error handling
 pub fn bind(port: Option<Port>) -> TcpListener {
     let listener = match port {
         Some(port) => {
@@ -22,13 +21,25 @@ pub fn bind(port: Option<Port>) -> TcpListener {
     }
 }
 
-pub fn accept(dict: &mut Dictionary, listener: &TcpListener) {
+/// # Half-duplex connection
+/// Commands are received, processed, and responded to.
+pub fn run(dict: &mut Dictionary, listener: &TcpListener) {
     for stream in listener.incoming() {
-        let mut command = String::new();
-        stream.unwrap().read_to_string(&mut command).unwrap();
+        let stream = stream.unwrap();
+        let mut reader = BufReader::new(&stream);
+        let mut writer = BufWriter::new(&stream);
 
-        // TODO: Error handling (external to module)
-        let command = command.parse::<Command>().unwrap();
-        dict.run_headless(command).unwrap();
+        let mut command = String::new();
+        reader.read_line(&mut command).unwrap();
+
+        let command = match command.parse::<Command>() {
+            Ok(com) => com,
+            Err(e) => {
+                panic!("{}", e.to_string());
+            }
+        };
+
+        let result = dict.run(command);
+        writer.write_all(result.as_bytes()).unwrap();
     }
 }

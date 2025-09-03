@@ -1,6 +1,6 @@
 use std::{time::{Duration, SystemTime}};
 
-use kvdis::{command::{Command}, connection::{accept, bind}, dictionary::{Dictionary, Entry}};
+use kvdis::{command::{Command}, connection::{run, bind}, dictionary::{Dictionary, Entry}};
 use sap::{Parser, Argument};
 
 const DEFAULT_PORT: u16 = 1453;
@@ -40,12 +40,10 @@ fn main() {
 
     dict.expire("3", Duration::from_secs(3));
 
-    accept(&mut dict, &bind(None));
-
-    //cli(&mut dict);
+    run(&mut dict, &bind(None));
 }
 
-fn cli(dict: &mut Dictionary) {
+fn _cli(dict: &mut Dictionary) {
     loop {
         let mut line = String::new();
         match std::io::stdin().read_line(&mut line) {
