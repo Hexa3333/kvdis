@@ -7,3 +7,4 @@ pub mod parsing;
 pub mod errors;
 pub mod dictionary;
 pub mod connection;
+pub mod persistence;
