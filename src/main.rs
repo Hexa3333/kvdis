@@ -40,14 +40,12 @@ fn main() {
 
     dict.expire("3", Duration::from_secs(3));
 
-    let set_command = "SET something whatevs".parse::<Command>().unwrap();
-    let get_command = "GET something".parse::<Command>().unwrap();
-    dict.run(set_command).unwrap();
-    dict.run(get_command).unwrap();
+    accept(&mut dict, &bind(None));
 
-    let html = dict.dump_html();
-    fs::write("./dump.html", html).unwrap();
+    //cli(&mut dict);
+}
 
+fn cli(dict: &mut Dictionary) {
     loop {
         let mut line = String::new();
         match std::io::stdin().read_line(&mut line) {
@@ -59,12 +57,12 @@ fn main() {
             Ok(_n_read) => {
                 match line.parse::<Command>() {
                     Err(e) => {
-                        eprintln!("{}", get_parsing_error_str(e));
+                        eprintln!("{}", e.to_string());
                         continue;
                     }
 
                     Ok(com) => {
-                        println!("{}", handle_command(&mut dict, com));
+                        println!("{}", handle_command(dict, com));
                     }
                 };
             }
@@ -72,32 +70,9 @@ fn main() {
     }
 }
 
-fn get_parsing_error_str(err: ParseError) -> String {
-    match err {
-        ParseError::NotACommand => {
-            "Not a command!".to_string()
-        },
-        ParseError::InvalidParameters => {
-            "Command parameters are invalid!".to_string()
-        },
-        ParseError::IsEmpty => {
-            "Empty.".to_string()
-        }
-    }
-}
-
 fn handle_command(dict: &mut Dictionary, com: Command) -> String {
     match dict.run(com) {
-        Err(e) => {
-            match e {
-                DictionaryError::DoesNotExist => {
-                    "Key does not exist.".to_string()
-                },
-                DictionaryError::IsExpired => {
-                    "Key has expired.".to_string()
-                }
-            }
-        },
+        Err(e) => e.to_string(),
 
         Ok(ret) => {
             match ret {
