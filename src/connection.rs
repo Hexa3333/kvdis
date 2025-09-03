@@ -1,4 +1,4 @@
-use std::{io::{Read}, net::{TcpListener}};
+use std::{io::{self, Read}, net::TcpListener};
 
 use crate::{command::Command, dictionary::Dictionary};
 
@@ -7,13 +7,18 @@ const DEFAULT_PORT_STR: &str = "7777";
 
 // TODO: binding logic for spec ports and error handling
 pub fn bind(port: Option<Port>) -> TcpListener {
-    match port {
+    let listener = match port {
         Some(port) => {
-            TcpListener::bind(format!("127.0.0.1:{port}")).unwrap()
+            TcpListener::bind(format!("127.0.0.1:{port}"))
         }
         None => {
-            TcpListener::bind(format!("127.0.0.1:{}", DEFAULT_PORT_STR)).unwrap()
+            TcpListener::bind(format!("127.0.0.1:{}", DEFAULT_PORT_STR))
         }
+    };
+
+    match listener {
+        Err(e) => panic!("Listening socket could not be created: {e}"),
+        Ok(l) => l
     }
 }
 
