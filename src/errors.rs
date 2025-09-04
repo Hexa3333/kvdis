@@ -12,6 +12,12 @@ pub enum DictionaryError {
     InvalidOperationType
 }
 
+#[derive(Debug)]
+pub enum SerializationError {
+    Key,
+    Value
+}
+
 impl ToString for ParseError {
     fn to_string(&self) -> String {
         match self {
