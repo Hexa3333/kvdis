@@ -1,7 +1,7 @@
 use crate::dictionary::{Dictionary, Entry};
 use std::{collections::HashMap, sync::{Arc, Mutex}};
 
-struct SavingData {
+pub struct SavingData {
     map: Arc<Mutex<HashMap<String, Entry>>>
 }
 
@@ -24,9 +24,10 @@ impl SavingData {
             line.push(',');
             line.push_str(&entry.value);
             match entry.expiration {
-                Some(_exp) => {
+                Some(exp) => {
                     line.push(',');
-                    // TODO (SystemTime to string)
+                    let exp = humantime::format_rfc3339(exp).to_string();
+                    line.push_str(&exp);
                 },
                 None => {}
             }
@@ -60,7 +61,9 @@ mod savingdata {
         });
         let s = SavingData::new(&dict).get_as_csv();
 
+        let time_str = humantime::format_rfc3339(time).to_string();
         assert!(s.contains("enjoy,yourself\n"));
-        assert!(s.contains("liar,pants_on_fire,\n"));
+        assert!(s.contains("liar,pants_on_fire,{}\n"
+                .to_string().replace("{}", &time_str).as_str()));
     }
 }
