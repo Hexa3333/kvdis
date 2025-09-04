@@ -1,4 +1,4 @@
-use crate::dictionary::{Dictionary, Entry};
+use crate::{dictionary::{Dictionary, Entry}, errors::SerializationError};
 use std::{collections::HashMap, sync::{Arc, Mutex}};
 
 pub struct SavingData {
@@ -11,6 +11,27 @@ impl SavingData {
         SavingData {
             map: Arc::clone(&dict.map)
         }
+    }
+
+    pub fn set_from_csv(&mut self, csv: &str) -> Result<(), SerializationError> {
+        for line in csv.lines() {
+            let parts: Vec<&str> = line.split(',').collect();
+            let key = parts.get(0).ok_or(SerializationError::Key)?;
+            let value = parts.get(1).ok_or(SerializationError::Value)?;
+            let _expiration = match parts.get(2) {
+                Some(exp) => {
+                    // TODO: error checking
+                    Some(exp.parse::<humantime::Timestamp>().unwrap())
+                },
+                None => None
+            };
+
+            // NOTE: possible poisoning
+            let mut guard = self.map.lock().unwrap();
+            guard.insert(key.to_string(), Entry { value: value.to_string(), expiration: None });
+        }
+
+        Ok(())
     }
 
     /// Locks the map and creates a csv String from it
@@ -41,8 +62,8 @@ impl SavingData {
 }
 
 #[cfg(test)]
-mod savingdata {
-    use std::time::{SystemTime, Duration};
+mod persistence {
+    use std::{time::{Duration, SystemTime}};
 
     use super::*;
 
@@ -65,5 +86,22 @@ mod savingdata {
         assert!(s.contains("enjoy,yourself\n"));
         assert!(s.contains("liar,pants_on_fire,{}\n"
                 .to_string().replace("{}", &time_str).as_str()));
+    }
+
+    #[test]
+    fn csv_to_map() {
+        let dict = Dictionary::new();
+        let csv = "1,one\n2,two\n3,three";
+
+        let mut sd = SavingData::new(&dict);
+        sd.set_from_csv(&csv).unwrap();
+
+        assert_eq!(dict.get("1").unwrap(), "one".to_string());
+        assert_eq!(dict.get("2").unwrap(), "two".to_string());
+        assert_eq!(dict.get("3").unwrap(), "three".to_string());
+    }
+
+    #[test]
+    fn csv_to_map_with_expiration() {
     }
 }
