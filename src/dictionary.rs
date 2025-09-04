@@ -1,4 +1,4 @@
-use std::{collections::HashMap, time::{Duration, SystemTime}};
+use std::{collections::HashMap, time::{Duration, SystemTime}, sync::{Arc, Mutex}};
 
 use crate::{command::{Command, CommandResult}, errors::DictionaryError};
 
@@ -10,14 +10,14 @@ pub struct Entry {
 
 #[derive(Debug)]
 pub struct Dictionary {
-    map: HashMap<String, Entry>
+    pub map: Arc<Mutex<HashMap<String, Entry>>>
 }
 
 /// Treats everything as a String,
 /// `incr` and `decr` operations work on parsable i64 bound Strings
 impl Dictionary {
     pub fn new() -> Self {
-        Dictionary { map: HashMap::new() }
+        Dictionary { map: Arc::new(Mutex::new(HashMap::new())) }
     }
 
     /// Runs a `Command`
@@ -64,7 +64,8 @@ impl Dictionary {
     }
 
     pub fn set(&mut self, key: String, value: Entry) {
-        self.map.insert(key, value);
+        let mut map = self.map.lock().unwrap();
+        map.insert(key, value);
     }
 
     /// # Returns
@@ -72,7 +73,8 @@ impl Dictionary {
     /// - If expired, Err(CommandError::IsExpired)
     /// - If it does not exist, Err(CommandError::DoesNotExist)
     pub fn get(&self, key: &str) -> Result<String, DictionaryError> {
-        match self.map.get(key) {
+        let map = self.map.lock().unwrap();
+        match map.get(key) {
             Some(e) => {
                 // Check if expired
                 if let Some(lifetime) = e.expiration {
@@ -88,15 +90,18 @@ impl Dictionary {
     }
 
     pub fn del(&mut self, key: &str) {
-        self.map.remove(key);
+        let mut map = self.map.lock().unwrap();
+        map.remove(key);
     }
 
     pub fn exists(&self, key: &str) -> bool {
-        self.map.get(key).is_some()
+        let map = self.map.lock().unwrap();
+        map.get(key).is_some()
     }
 
     pub fn expire(&mut self, key: &str, lifetime: Duration) {
-        match self.map.get_mut(key) {
+        let mut map = self.map.lock().unwrap();
+        match map.get_mut(key) {
             Some(entry) => {
                 entry.expiration = Some(SystemTime::now() + lifetime);
             },
@@ -125,81 +130,6 @@ impl Dictionary {
             value: new_val.to_string(),
             expiration: None
         });
-    }
-
-    pub fn get_paired(&self) -> Vec<(&str, &Entry)> {
-        let mut v = Vec::new();
-        for (key, val) in self.map.iter() {
-            v.push((&key[..], val));
-        }
-
-        v
-    }
-
-
-    pub fn dump_html(&self) -> String {
-        let html = "\
-<!DOCTYPE html>
-  <head>
-    <meta charset=\"UTF-8\">
-    <title>kvdis</title>
-  <style>
-    body {
-        background-color:#4f7696;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-    }
-
-    th, td {
-      text-align: left;
-      padding: 8px;
-    }
-
-     td:nth-child(even), th:nth-child(even) {
-      background-color: #D6EEEE;
-    }
-  </style>
-  </head>
-
-  <body>
-      <table>
-DICTIONARY
-      </table>
-  </body>
-</html>
-".to_string();
-
-        /* Each pair should be like so:
-        <tr>
-            <td>{key}</td>
-            <td>{value}</td>
-            <td>{expiration}</td>
-        </tr
-         */
-        let contents: String = self.map.iter()
-            .map(|kv| {
-                if let Some(expiration) = kv.1.expiration {
-                    let expiration = humantime::format_rfc3339_seconds(expiration).to_string();
-
-                    format!(
-                            "<tr><td>{}</td><td>{}</td><td>{}</td></tr>",
-                            kv.0,
-                            kv.1.value,
-                            expiration
-                            )
-                } else {
-                    format!(
-                            "<tr><td>{}</td><td>{}</td></tr>",
-                            kv.0,
-                            kv.1.value,
-                            )
-                }
-            })
-            .collect();
-
-        html.replace("DICTIONARY", &contents)
     }
 }
 
