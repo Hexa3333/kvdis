@@ -16,12 +16,16 @@ impl Serializer {
     pub fn set_from_csv(&mut self, csv: &str) -> Result<(), SerializationError> {
         for line in csv.lines() {
             let parts: Vec<&str> = line.split(',').collect();
-            let key = parts.get(0).ok_or(SerializationError::Key)?;
-            let value = parts.get(1).ok_or(SerializationError::Value)?;
+            let key = parts.get(0).ok_or(SerializationError::KeyRead)?;
+            let value = parts.get(1).ok_or(SerializationError::ValueRead)?;
             let expiration = match parts.get(2) {
                 Some(exp) => {
-                    // TODO: error checking
-                    Some(exp.parse::<humantime::Timestamp>().unwrap())
+                    match exp.parse::<humantime::Timestamp>() {
+                        Ok(exp) => Some(exp),
+                        Err(_e) => {
+                            return Err(SerializationError::TimestampRead);
+                        }
+                    }
                 },
                 None => None
             };
@@ -139,5 +143,16 @@ mod persistence {
         assert_eq!(dict.get("2").unwrap(), "two".to_string());
         assert_eq!(dict.get("3"), Err(DictionaryError::IsExpired));
         assert_eq!(dict.exists("3").to_string(), "false");
+    }
+
+    #[test]
+    fn csv_to_map_expiration_corrupted() {
+        let dict = Dictionary::new();
+
+        // NOTE: Corrupted date
+        let csv = "1,one\n2,two\n3,three,01-91-01T70:00:00Z";
+
+        let mut sd = Serializer::new(&dict);
+        assert_eq!(sd.set_from_csv(&csv), Err(SerializationError::TimestampRead));
     }
 }
