@@ -8,7 +8,8 @@ pub enum Command {
     Exists(String),
     Expire(String, Duration),
     Incr(String),
-    Decr(String)
+    Decr(String),
+    Save
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -19,7 +20,8 @@ pub enum CommandResult {
     Exists(bool),
     Expire,
     Incr,
-    Decr
+    Decr,
+    Save
 }
 
 impl ToString for CommandResult {

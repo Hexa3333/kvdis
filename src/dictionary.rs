@@ -1,6 +1,6 @@
-use std::{collections::HashMap, time::{Duration, SystemTime}, sync::{Arc, Mutex}};
+use std::{collections::HashMap, fs, sync::{Arc, Mutex}, thread, time::{Duration, SystemTime}};
 
-use crate::{command::{Command, CommandResult}, errors::DictionaryError};
+use crate::{command::{Command, CommandResult}, errors::DictionaryError, persistence::Serializer};
 
 #[derive(Debug)]
 pub struct Entry {
@@ -53,6 +53,16 @@ impl Dictionary {
                 self.decr(&key)?;
                 Ok(CommandResult::Decr)
             }
+            Save => {
+                // TODO
+                // Spawns a detached thread
+                let serializer = Serializer::new(&self);
+                thread::spawn(move || {
+                    let csv = serializer.get_as_csv();
+                    fs::write("./saved.csv", csv).unwrap();
+                });
+                Ok(CommandResult::Save)
+            }
         }
     }
 
@@ -89,6 +99,8 @@ impl Dictionary {
         }
     }
 
+    /// del does not have to check for expiries, because in the future
+    /// i might implement lazy deletion in the background.
     pub fn del(&mut self, key: &str) -> Result<(), DictionaryError> {
         let mut map = self.map.lock().unwrap();
         match map.remove(key) {

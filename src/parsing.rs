@@ -72,6 +72,9 @@ impl FromStr for Command {
                 } else {
                     Ok(Decr(words[1].to_string()))
                 }
+            },
+            "SAVE" => {
+                Ok(Save)
             }
 
             _ => Err(ParseError::NotACommand)
