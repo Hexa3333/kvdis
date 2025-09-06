@@ -73,6 +73,9 @@ impl FromStr for Command {
                     Ok(Decr(words[1].to_string()))
                 }
             },
+            "CLEAR" => {
+                Ok(Clear)
+            },
             "SAVE" => {
                 Ok(Save)
             },

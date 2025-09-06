@@ -9,6 +9,7 @@ pub enum Command {
     Expire(String, Duration),
     Incr(String),
     Decr(String),
+    Clear,
     Save,
     Load
 }
@@ -22,6 +23,7 @@ pub enum CommandResult {
     Expire,
     Incr,
     Decr,
+    Clear,
     Save,
     Load
 }

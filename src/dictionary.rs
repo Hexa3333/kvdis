@@ -52,7 +52,11 @@ impl Dictionary {
             Decr(key) => {
                 self.decr(&key)?;
                 Ok(CommandResult::Decr)
-            }
+            },
+            Clear => {
+                self.clear();
+                Ok(CommandResult::Clear)
+            },
             Save => {
                 // TODO
                 // Spawns a detached thread
@@ -178,6 +182,11 @@ impl Dictionary {
         });
 
         Ok(())
+    }
+
+    pub fn clear(&mut self) {
+        let mut guard = self.map.lock().unwrap();
+        guard.clear();
     }
 }
 
