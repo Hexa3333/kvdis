@@ -75,6 +75,9 @@ impl FromStr for Command {
             },
             "SAVE" => {
                 Ok(Save)
+            },
+            "LOAD" => {
+                Ok(Load)
             }
 
             _ => Err(ParseError::NotACommand)

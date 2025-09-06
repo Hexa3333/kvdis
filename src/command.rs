@@ -9,7 +9,8 @@ pub enum Command {
     Expire(String, Duration),
     Incr(String),
     Decr(String),
-    Save
+    Save,
+    Load
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -21,7 +22,8 @@ pub enum CommandResult {
     Expire,
     Incr,
     Decr,
-    Save
+    Save,
+    Load
 }
 
 impl ToString for CommandResult {

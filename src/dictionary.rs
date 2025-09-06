@@ -62,6 +62,15 @@ impl Dictionary {
                     fs::write("./saved.csv", csv).unwrap();
                 });
                 Ok(CommandResult::Save)
+            },
+            Load => {
+                // TODO
+                let csv = fs::read_to_string("./saved.csv").unwrap();
+
+                let mut serializer = Serializer::new(&self);
+                serializer.set_from_csv(&csv).unwrap();
+
+                Ok(CommandResult::Load)
             }
         }
     }
