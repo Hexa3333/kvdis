@@ -99,7 +99,19 @@ impl Dictionary {
 
     pub fn exists(&self, key: &str) -> bool {
         let map = self.map.lock().unwrap();
-        map.get(key).is_some()
+        match map.get(key) {
+            None => false,
+            Some(value) => match value.expiration {
+                None => true,
+                Some(expiration) => {
+                    if SystemTime::now() <= expiration {
+                        true
+                    } else {
+                        false
+                    }
+                }
+            }
+        }
     }
 
     pub fn expire(&mut self, key: &str, lifetime: Duration) -> Result<(), DictionaryError> {

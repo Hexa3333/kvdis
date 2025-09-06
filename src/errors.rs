@@ -12,10 +12,11 @@ pub enum DictionaryError {
     InvalidOperationType
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum SerializationError {
-    Key,
-    Value
+    KeyRead,
+    ValueRead,
+    TimestampRead
 }
 
 impl ToString for ParseError {
@@ -45,6 +46,22 @@ impl ToString for DictionaryError {
             },
             DictionaryError::InvalidOperationType => {
                 "This operation is not defined on value type.".to_string()
+            }
+        }
+    }
+}
+
+impl ToString for SerializationError {
+    fn to_string(&self) -> String {
+        match self {
+            SerializationError::KeyRead => {
+                "Key could not be read.".to_string()
+            },
+            SerializationError::ValueRead => {
+                "Value could not be read.".to_string()
+            },
+            SerializationError::TimestampRead => {
+                "Expiration timestamp could not be read.".to_string()
             }
         }
     }

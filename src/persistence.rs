@@ -1,14 +1,14 @@
 use crate::{dictionary::{Dictionary, Entry}, errors::SerializationError};
 use std::{collections::HashMap, sync::{Arc, Mutex}};
 
-pub struct SavingData {
+pub struct Serializer {
     map: Arc<Mutex<HashMap<String, Entry>>>
 }
 
 #[allow(dead_code)]
-impl SavingData {
+impl Serializer {
     pub fn new(dict: &Dictionary) -> Self {
-        SavingData {
+        Serializer {
             map: Arc::clone(&dict.map)
         }
     }
@@ -16,19 +16,29 @@ impl SavingData {
     pub fn set_from_csv(&mut self, csv: &str) -> Result<(), SerializationError> {
         for line in csv.lines() {
             let parts: Vec<&str> = line.split(',').collect();
-            let key = parts.get(0).ok_or(SerializationError::Key)?;
-            let value = parts.get(1).ok_or(SerializationError::Value)?;
-            let _expiration = match parts.get(2) {
+            let key = parts.get(0).ok_or(SerializationError::KeyRead)?;
+            let value = parts.get(1).ok_or(SerializationError::ValueRead)?;
+            let expiration = match parts.get(2) {
                 Some(exp) => {
-                    // TODO: error checking
-                    Some(exp.parse::<humantime::Timestamp>().unwrap())
+                    match exp.parse::<humantime::Timestamp>() {
+                        Ok(exp) => Some(exp),
+                        Err(_e) => {
+                            return Err(SerializationError::TimestampRead);
+                        }
+                    }
                 },
                 None => None
             };
 
             // NOTE: possible poisoning
             let mut guard = self.map.lock().unwrap();
-            guard.insert(key.to_string(), Entry { value: value.to_string(), expiration: None });
+            guard.insert(key.to_string(), Entry {
+                value: value.to_string(), 
+                expiration: match expiration {
+                    Some(exp) => Some(exp.into()),
+                    None => None
+                }
+            });
         }
 
         Ok(())
@@ -65,6 +75,8 @@ impl SavingData {
 mod persistence {
     use std::{time::{Duration, SystemTime}};
 
+    use crate::errors::DictionaryError;
+
     use super::*;
 
     #[test]
@@ -80,7 +92,7 @@ mod persistence {
             value: "pants_on_fire".to_string(),
             expiration: Some(time)
         });
-        let s = SavingData::new(&dict).get_as_csv();
+        let s = Serializer::new(&dict).get_as_csv();
 
         let time_str = humantime::format_rfc3339(time).to_string();
         assert!(s.contains("enjoy,yourself\n"));
@@ -93,7 +105,7 @@ mod persistence {
         let dict = Dictionary::new();
         let csv = "1,one\n2,two\n3,three";
 
-        let mut sd = SavingData::new(&dict);
+        let mut sd = Serializer::new(&dict);
         sd.set_from_csv(&csv).unwrap();
 
         assert_eq!(dict.get("1").unwrap(), "one".to_string());
@@ -102,6 +114,45 @@ mod persistence {
     }
 
     #[test]
-    fn csv_to_map_with_expiration() {
+    fn csv_to_map_with_expiration_valid() {
+        let dict = Dictionary::new();
+
+        // NOTE: January 1st 2100, 12 o'clock
+        let csv = "1,one\n2,two\n3,three,2100-01-01T00:00:00Z";
+
+        let mut sd = Serializer::new(&dict);
+        sd.set_from_csv(&csv).unwrap();
+
+        assert_eq!(dict.get("1").unwrap(), "one".to_string());
+        assert_eq!(dict.get("2").unwrap(), "two".to_string());
+        assert_eq!(dict.get("3").unwrap(), "three".to_string());
+        assert_eq!(dict.exists("3").to_string(), "true");
+    }
+
+    #[test]
+    fn csv_to_map_with_expiration_invalid() {
+        let dict = Dictionary::new();
+
+        // NOTE: January 1st 2001, 12 o'clock
+        let csv = "1,one\n2,two\n3,three,2001-01-01T00:00:00Z";
+
+        let mut sd = Serializer::new(&dict);
+        sd.set_from_csv(&csv).unwrap();
+
+        assert_eq!(dict.get("1").unwrap(), "one".to_string());
+        assert_eq!(dict.get("2").unwrap(), "two".to_string());
+        assert_eq!(dict.get("3"), Err(DictionaryError::IsExpired));
+        assert_eq!(dict.exists("3").to_string(), "false");
+    }
+
+    #[test]
+    fn csv_to_map_expiration_corrupted() {
+        let dict = Dictionary::new();
+
+        // NOTE: Corrupted date
+        let csv = "1,one\n2,two\n3,three,01-91-01T70:00:00Z";
+
+        let mut sd = Serializer::new(&dict);
+        assert_eq!(sd.set_from_csv(&csv), Err(SerializationError::TimestampRead));
     }
 }
