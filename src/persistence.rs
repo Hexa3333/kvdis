@@ -32,6 +32,7 @@ impl Serializer {
 
             // NOTE: possible poisoning
             let mut guard = self.map.lock().unwrap();
+            guard.clear();
             guard.insert(key.to_string(), Entry {
                 value: value.to_string(), 
                 expiration: match expiration {
