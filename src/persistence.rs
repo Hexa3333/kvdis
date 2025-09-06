@@ -14,6 +14,11 @@ impl Serializer {
     }
 
     pub fn set_from_csv(&mut self, csv: &str) -> Result<(), SerializationError> {
+        // NOTE: possible poisoning
+        let mut guard = self.map.lock().unwrap();
+        guard.clear();
+        drop(guard);
+
         for line in csv.lines() {
             let parts: Vec<&str> = line.split(',').collect();
             let key = parts.get(0).ok_or(SerializationError::KeyRead)?;
@@ -32,7 +37,6 @@ impl Serializer {
 
             // NOTE: possible poisoning
             let mut guard = self.map.lock().unwrap();
-            guard.clear();
             guard.insert(key.to_string(), Entry {
                 value: value.to_string(), 
                 expiration: match expiration {
