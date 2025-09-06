@@ -42,7 +42,7 @@ impl Dictionary {
                 Ok(CommandResult::Exists(self.exists(&key)))
             },
             Expire(key, lifetime) => {
-                self.expire(&key, lifetime);
+                self.expire(&key, lifetime)?;
                 Ok(CommandResult::Expire)
             },
             Incr(key) => {
@@ -99,14 +99,14 @@ impl Dictionary {
         map.get(key).is_some()
     }
 
-    pub fn expire(&mut self, key: &str, lifetime: Duration) {
+    pub fn expire(&mut self, key: &str, lifetime: Duration) -> Result<(), DictionaryError> {
         let mut map = self.map.lock().unwrap();
         match map.get_mut(key) {
             Some(entry) => {
                 entry.expiration = Some(SystemTime::now() + lifetime);
+                Ok(())
             },
-            // TODO
-            None => {}
+            None => Err(DictionaryError::DoesNotExist)
         }
     }
 
@@ -146,7 +146,7 @@ impl Dictionary {
 }
 
 #[cfg(test)]
-mod commands {
+mod dictionary {
     use super::*;
 
     #[test]
@@ -227,5 +227,13 @@ mod commands {
         // Check that it worked (-5-1 = -6)
         let get_command = "GET something".parse::<Command>().unwrap();
         assert_eq!(dict.run_headless(get_command), Ok(CommandResult::Get("-6".to_string())));
+    }
+
+
+    #[test]
+    fn call_expire_on_nonexistent() {
+        let mut dict = Dictionary::new();
+
+        assert_eq!(dict.expire("blahblah", Duration::from_secs(5)), Err(DictionaryError::DoesNotExist));
     }
 }
