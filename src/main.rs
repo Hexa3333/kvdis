@@ -1,5 +1,5 @@
 use std::process;
-use kvdis::{command::{Command}, connection::{run, bind}, dictionary::{Dictionary, Entry}};
+use kvdis::{command::Command, connection::{bind, run}, dictionary::{Dictionary}};
 use sap::{Parser, Argument};
 
 const DEFAULT_PORT: u16 = 7777;
