@@ -35,7 +35,7 @@ impl Dictionary {
                 return Ok(CommandResult::Get(self.get(&key)?));
             },
             Del(key) => {
-                self.del(&key);
+                self.del(&key)?;
                 Ok(CommandResult::Del)
             },
             Exists(key) => {
@@ -89,9 +89,12 @@ impl Dictionary {
         }
     }
 
-    pub fn del(&mut self, key: &str) {
+    pub fn del(&mut self, key: &str) -> Result<(), DictionaryError> {
         let mut map = self.map.lock().unwrap();
-        map.remove(key);
+        match map.remove(key) {
+            Some(_) => Ok(()),
+            None => Err(DictionaryError::DoesNotExist)
+        }
     }
 
     pub fn exists(&self, key: &str) -> bool {
@@ -235,5 +238,12 @@ mod dictionary {
         let mut dict = Dictionary::new();
 
         assert_eq!(dict.expire("blahblah", Duration::from_secs(5)), Err(DictionaryError::DoesNotExist));
+    }
+
+    #[test]
+    fn call_del_on_nonexistent() {
+        let mut dict = Dictionary::new();
+
+        assert_eq!(dict.del("blahblah"), Err(DictionaryError::DoesNotExist));
     }
 }
