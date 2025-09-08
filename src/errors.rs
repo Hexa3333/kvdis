@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum ParseError {
     InvalidParameters,
@@ -35,59 +37,35 @@ impl From<SerializationError> for DictionaryError {
     }
 }
 
-impl ToString for ParseError {
-    fn to_string(&self) -> String {
+impl Display for ParseError  {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ParseError::NotACommand => {
-                "Not a command!".to_string()
-            },
-            ParseError::InvalidParameters => {
-                "Command parameters are invalid!".to_string()
-            },
-            ParseError::IsEmpty => {
-                "Empty.".to_string()
-            }
+            ParseError::NotACommand => write!(f, "Not a command!"),
+            ParseError::InvalidParameters => write!(f, "Command parameters are invalid!"),
+            ParseError::IsEmpty => write!(f, "Empty")
         }
     }
 }
 
-impl ToString for DictionaryError {
-    fn to_string(&self) -> String {
+impl Display for DictionaryError  {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DictionaryError::DoesNotExist => {
-                "Key does not exist.".to_string()
-            },
-            DictionaryError::IsExpired => {
-                "Key has expired.".to_string()
-            },
-            DictionaryError::InvalidOperationType => {
-                "This operation is not defined on value type.".to_string()
-            },
-            DictionaryError::IOError(e) => {
-                e.to_string()
-            }
+            DictionaryError::DoesNotExist => write!(f, "Key does not exist."),
+            DictionaryError::IsExpired => write!(f, "Key has expired."),
+            DictionaryError::InvalidOperationType => write!(f, "This operation is not defined on value type."),
+            DictionaryError::IOError(e) => write!(f, "{e}")
         }
     }
 }
 
-impl ToString for SerializationError {
-    fn to_string(&self) -> String {
+impl Display for SerializationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SerializationError::KeyRead => {
-                "Key could not be read.".to_string()
-            },
-            SerializationError::ValueRead => {
-                "Value could not be read.".to_string()
-            },
-            SerializationError::TimestampRead => {
-                "Expiration timestamp could not be read.".to_string()
-            },
-            SerializationError::IORead => {
-                "IO read failed.".to_string()
-            },
-            SerializationError::IOWrite => {
-                "IO write failed.".to_string()
-            }
+            SerializationError::KeyRead => write!(f, "Key could not be read."),
+            SerializationError::ValueRead => write!(f, "Value could not be read."),
+            SerializationError::TimestampRead => write!(f, "Expiration timestamp could not be read."),
+            SerializationError::IORead => write!(f, "IO read failed."),
+            SerializationError::IOWrite => write!(f, "IO write failed.")
         }
     }
 }
