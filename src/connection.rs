@@ -3,7 +3,7 @@ use std::{io::{self, BufRead, BufReader, BufWriter, Write}, net::TcpListener};
 use crate::{command::Command, dictionary::Dictionary};
 
 type Port = u16;
-const DEFAULT_PORT_STR: &str = "7777";
+pub const DEFAULT_PORT: Port = 7777;
 
 pub fn bind(port: Option<Port>) -> TcpListener {
     let listener = match port {
@@ -11,7 +11,7 @@ pub fn bind(port: Option<Port>) -> TcpListener {
             TcpListener::bind(format!("127.0.0.1:{port}"))
         }
         None => {
-            TcpListener::bind(format!("127.0.0.1:{}", DEFAULT_PORT_STR))
+            TcpListener::bind(format!("127.0.0.1:{}", DEFAULT_PORT.to_string()))
         }
     };
 
@@ -23,6 +23,7 @@ pub fn bind(port: Option<Port>) -> TcpListener {
 
 /// # Half-duplex connection
 /// Commands are received, processed, and responded to.
+/// With the exception of SAVE/LOAD calls which run on a seperate thread.
 pub fn run(dict: &mut Dictionary, listener: &TcpListener) -> io::Result<()> {
     for stream in listener.incoming() {
         let stream = stream?;
@@ -30,7 +31,7 @@ pub fn run(dict: &mut Dictionary, listener: &TcpListener) -> io::Result<()> {
         let mut writer = BufWriter::new(&stream);
 
         let mut command = String::new();
-        reader.read_line(&mut command).unwrap();
+        reader.read_line(&mut command)?;
 
         let command = match command.parse::<Command>() {
             Ok(com) => com,

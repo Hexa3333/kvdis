@@ -9,6 +9,9 @@
 //! #### EXPIRE \<key\> \<duration in humantime format\>
 //! #### INCR \<key\>
 //! #### DECR \<key\>
+//! #### CLEAR
+//! #### SAVE
+//! #### LOAD
 
 pub mod command;
 pub mod parsing;

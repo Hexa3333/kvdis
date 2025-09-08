@@ -1,10 +1,8 @@
-use std::{process};
-use kvdis::{command::Command, connection::{bind, run}, dictionary::{Dictionary}};
+use std::{io, process};
+use kvdis::{command::Command, connection::{bind, run, DEFAULT_PORT}, dictionary::{Dictionary}};
 use sap::{Parser, Argument};
 
-const DEFAULT_PORT: u16 = 7777;
-
-fn main() {
+fn main() -> io::Result<()> {
     let mut parser = Parser::from_env().unwrap();
 
     let mut port: u16 = DEFAULT_PORT;
@@ -26,7 +24,9 @@ fn main() {
     }
 
     let mut dict = Dictionary::new();
-    run(&mut dict, &bind(Some(port))).unwrap();
+    run(&mut dict, &bind(Some(port)))?;
+
+    Ok(())
 }
 
 fn _cli(dict: &mut Dictionary) {

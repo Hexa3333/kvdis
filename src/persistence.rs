@@ -7,7 +7,6 @@ pub struct Serializer {
     path: PathBuf
 }
 
-#[allow(dead_code)]
 impl Serializer {
     pub fn new(dict: &Dictionary, path: PathBuf) -> Self {
         Serializer {
