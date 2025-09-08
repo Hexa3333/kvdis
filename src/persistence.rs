@@ -1,5 +1,5 @@
 use crate::{dictionary::{Dictionary, Entry}, errors::SerializationError};
-use std::{collections::HashMap, fs, io, path::PathBuf, sync::{Arc, Mutex}};
+use std::{collections::HashMap, fs, path::PathBuf, sync::{Arc, Mutex}};
 
 const STORAGE_PATH: &str = "./db.csv";
 pub struct Serializer {
@@ -17,13 +17,22 @@ impl Serializer {
     }
 
     pub fn load_file_csv(&mut self) -> Result<(), SerializationError> {
-        let csv = fs::read_to_string(&self.path).unwrap();
+        let csv = match fs::read_to_string(&self.path) {
+            Ok(csv) => csv,
+            Err(_) => {
+                return Err(SerializationError::IOReadError);
+            }
+        };
+
         self.set_from_csv(&csv)
     }
 
-    pub fn save_file_csv(&self) -> io::Result<()> {
+    pub fn save_file_csv(&self) -> Result<(), SerializationError> {
         let csv = self.get_as_csv();
-        fs::write(&self.path, &csv)
+        match fs::write(&self.path, &csv) {
+            Ok(_) => Ok(()),
+            Err(_) => Err(SerializationError::IOWriteError)
+        }
     }
 
     pub fn set_from_csv(&mut self, csv: &str) -> Result<(), SerializationError> {

@@ -16,7 +16,9 @@ pub enum DictionaryError {
 pub enum SerializationError {
     KeyRead,
     ValueRead,
-    TimestampRead
+    TimestampRead,
+    IOReadError,
+    IOWriteError
 }
 
 impl ToString for ParseError {
@@ -62,6 +64,12 @@ impl ToString for SerializationError {
             },
             SerializationError::TimestampRead => {
                 "Expiration timestamp could not be read.".to_string()
+            },
+            SerializationError::IOReadError => {
+                "IO read failed.".to_string()
+            },
+            SerializationError::IOWriteError => {
+                "IO write failed.".to_string()
             }
         }
     }
