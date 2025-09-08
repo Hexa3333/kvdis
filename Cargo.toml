@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 humantime = "2.2.0"
 sap = "0.0.5"
+xdg = "3.0.0"

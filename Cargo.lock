@@ -14,6 +14,7 @@ version = "0.1.0"
 dependencies = [
  "humantime",
  "sap",
+ "xdg",
 ]
 
 [[package]]
@@ -21,3 +22,9 @@ name = "sap"
 version = "0.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32391a1f97f8182ee05a73831e5084311a883b52b93d2d756c6949fd577b56c7"
+
+[[package]]
+name = "xdg"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2fb433233f2df9344722454bc7e96465c9d03bff9d77c248f9e7523fe79585b5"
