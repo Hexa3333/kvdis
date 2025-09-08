@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, sync::{Arc, Mutex}, thread, time::{Duration, SystemTime}};
+use std::{collections::HashMap, sync::{Arc, Mutex}, thread, time::{Duration, SystemTime}};
 
 use crate::{command::{Command, CommandResult}, errors::DictionaryError, persistence::Serializer};
 
@@ -58,22 +58,11 @@ impl Dictionary {
                 Ok(CommandResult::Clear)
             },
             Save => {
-                // TODO
-                // Spawns a detached thread
-                let serializer = Serializer::new(&self);
-                thread::spawn(move || {
-                    let csv = serializer.get_as_csv();
-                    fs::write("./saved.csv", csv).unwrap();
-                });
+                self.save();
                 Ok(CommandResult::Save)
             },
             Load => {
-                // TODO
-                let csv = fs::read_to_string("./saved.csv").unwrap();
-
-                let mut serializer = Serializer::new(&self);
-                serializer.set_from_csv(&csv).unwrap();
-
+                self.load();
                 Ok(CommandResult::Load)
             }
         }
@@ -187,6 +176,20 @@ impl Dictionary {
     pub fn clear(&mut self) {
         let mut guard = self.map.lock().unwrap();
         guard.clear();
+    }
+
+    pub fn save(&self) {
+        let serializer = Serializer::new(&self);
+        thread::spawn(move || {
+            // TODO: error handling
+            serializer.save_file_csv().unwrap();
+        });
+    }
+
+    pub fn load(&self) {
+        let mut serializer = Serializer::new(&self);
+        // TODO: error handling
+        serializer.load_file_csv().unwrap();
     }
 }
 

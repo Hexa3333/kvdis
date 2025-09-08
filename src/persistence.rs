@@ -1,16 +1,29 @@
 use crate::{dictionary::{Dictionary, Entry}, errors::SerializationError};
-use std::{collections::HashMap, sync::{Arc, Mutex}};
+use std::{collections::HashMap, fs, io, path::PathBuf, sync::{Arc, Mutex}};
 
+const STORAGE_PATH: &str = "./db.csv";
 pub struct Serializer {
-    map: Arc<Mutex<HashMap<String, Entry>>>
+    map: Arc<Mutex<HashMap<String, Entry>>>,
+    path: PathBuf
 }
 
 #[allow(dead_code)]
 impl Serializer {
     pub fn new(dict: &Dictionary) -> Self {
         Serializer {
-            map: Arc::clone(&dict.map)
+            map: Arc::clone(&dict.map),
+            path: PathBuf::from(STORAGE_PATH)
         }
+    }
+
+    pub fn load_file_csv(&mut self) -> Result<(), SerializationError> {
+        let csv = fs::read_to_string(&self.path).unwrap();
+        self.set_from_csv(&csv)
+    }
+
+    pub fn save_file_csv(&self) -> io::Result<()> {
+        let csv = self.get_as_csv();
+        fs::write(&self.path, &csv)
     }
 
     pub fn set_from_csv(&mut self, csv: &str) -> Result<(), SerializationError> {

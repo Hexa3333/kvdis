@@ -1,4 +1,4 @@
-use std::process;
+use std::{process};
 use kvdis::{command::Command, connection::{bind, run}, dictionary::{Dictionary}};
 use sap::{Parser, Argument};
 
