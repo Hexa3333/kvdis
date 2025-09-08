@@ -9,7 +9,9 @@ pub enum ParseError {
 pub enum DictionaryError {
     DoesNotExist,
     IsExpired,
-    InvalidOperationType
+    InvalidOperationType,
+
+    IOError(SerializationError)
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -17,8 +19,20 @@ pub enum SerializationError {
     KeyRead,
     ValueRead,
     TimestampRead,
-    IOReadError,
-    IOWriteError
+
+    IORead,
+    IOWrite
+}
+
+// Uhm...
+impl From<SerializationError> for DictionaryError {
+    fn from(value: SerializationError) -> Self {
+        match value {
+            SerializationError::IORead => DictionaryError::IOError(SerializationError::IORead),
+            SerializationError::IOWrite => DictionaryError::IOError(SerializationError::IOWrite),
+            _ => unreachable!()
+        }
+    }
 }
 
 impl ToString for ParseError {
@@ -48,6 +62,9 @@ impl ToString for DictionaryError {
             },
             DictionaryError::InvalidOperationType => {
                 "This operation is not defined on value type.".to_string()
+            },
+            DictionaryError::IOError(e) => {
+                e.to_string()
             }
         }
     }
@@ -65,10 +82,10 @@ impl ToString for SerializationError {
             SerializationError::TimestampRead => {
                 "Expiration timestamp could not be read.".to_string()
             },
-            SerializationError::IOReadError => {
+            SerializationError::IORead => {
                 "IO read failed.".to_string()
             },
-            SerializationError::IOWriteError => {
+            SerializationError::IOWrite => {
                 "IO write failed.".to_string()
             }
         }

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::{Arc, Mutex}, thread, time::{Duration, SystemTime}};
 
-use crate::{command::{Command, CommandResult}, errors::DictionaryError, persistence::Serializer};
+use crate::{command::{Command, CommandResult}, errors::{DictionaryError}, persistence::Serializer};
 
 #[derive(Debug)]
 pub struct Entry {
@@ -188,8 +188,10 @@ impl Dictionary {
 
     pub fn load(&self) {
         let mut serializer = Serializer::new(&self);
-        // TODO: error handling
-        serializer.load_file_csv().unwrap();
+        thread::spawn(move || {
+            // TODO: error handling
+            serializer.load_file_csv().unwrap();
+        });
     }
 }
 

@@ -20,7 +20,7 @@ impl Serializer {
         let csv = match fs::read_to_string(&self.path) {
             Ok(csv) => csv,
             Err(_) => {
-                return Err(SerializationError::IOReadError);
+                return Err(SerializationError::IORead);
             }
         };
 
@@ -31,7 +31,7 @@ impl Serializer {
         let csv = self.get_as_csv();
         match fs::write(&self.path, &csv) {
             Ok(_) => Ok(()),
-            Err(_) => Err(SerializationError::IOWriteError)
+            Err(_) => Err(SerializationError::IOWrite)
         }
     }
 
