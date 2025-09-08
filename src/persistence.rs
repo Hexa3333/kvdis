@@ -1,7 +1,7 @@
 use crate::{dictionary::{Dictionary, Entry}, errors::SerializationError};
 use std::{collections::HashMap, fs, path::PathBuf, sync::{Arc, Mutex}};
 
-const STORAGE_PATH: &str = "./db.csv";
+pub const DEFAULT_STORAGE_PATH: &str = "./db.csv";
 pub struct Serializer {
     map: Arc<Mutex<HashMap<String, Entry>>>,
     path: PathBuf
@@ -9,10 +9,10 @@ pub struct Serializer {
 
 #[allow(dead_code)]
 impl Serializer {
-    pub fn new(dict: &Dictionary) -> Self {
+    pub fn new(dict: &Dictionary, path: PathBuf) -> Self {
         Serializer {
             map: Arc::clone(&dict.map),
-            path: PathBuf::from(STORAGE_PATH)
+            path: PathBuf::from(path)
         }
     }
 
@@ -119,7 +119,9 @@ mod persistence {
             value: "pants_on_fire".to_string(),
             expiration: Some(time)
         });
-        let s = Serializer::new(&dict).get_as_csv();
+        
+        // NOTE: Second argument to Serializer::new is useless
+        let s = Serializer::new(&dict, PathBuf::from(DEFAULT_STORAGE_PATH)).get_as_csv();
 
         let time_str = humantime::format_rfc3339(time).to_string();
         assert!(s.contains("enjoy,yourself\n"));
@@ -132,7 +134,8 @@ mod persistence {
         let dict = Dictionary::new();
         let csv = "1,one\n2,two\n3,three";
 
-        let mut sd = Serializer::new(&dict);
+        // NOTE: Second argument to Serializer::new is useless
+        let mut sd = Serializer::new(&dict, PathBuf::from(DEFAULT_STORAGE_PATH));
         sd.set_from_csv(&csv).unwrap();
 
         assert_eq!(dict.get("1").unwrap(), "one".to_string());
@@ -147,7 +150,8 @@ mod persistence {
         // NOTE: January 1st 2100, 12 o'clock
         let csv = "1,one\n2,two\n3,three,2100-01-01T00:00:00Z";
 
-        let mut sd = Serializer::new(&dict);
+        // NOTE: Second argument to Serializer::new is useless
+        let mut sd = Serializer::new(&dict, PathBuf::from(DEFAULT_STORAGE_PATH));
         sd.set_from_csv(&csv).unwrap();
 
         assert_eq!(dict.get("1").unwrap(), "one".to_string());
@@ -163,7 +167,8 @@ mod persistence {
         // NOTE: January 1st 2001, 12 o'clock
         let csv = "1,one\n2,two\n3,three,2001-01-01T00:00:00Z";
 
-        let mut sd = Serializer::new(&dict);
+        // NOTE: Second argument to Serializer::new is useless
+        let mut sd = Serializer::new(&dict, PathBuf::from(DEFAULT_STORAGE_PATH));
         sd.set_from_csv(&csv).unwrap();
 
         assert_eq!(dict.get("1").unwrap(), "one".to_string());
@@ -179,7 +184,8 @@ mod persistence {
         // NOTE: Corrupted date
         let csv = "1,one\n2,two\n3,three,01-91-01T70:00:00Z";
 
-        let mut sd = Serializer::new(&dict);
+        // NOTE: Second argument to Serializer::new is useless
+        let mut sd = Serializer::new(&dict, PathBuf::from(DEFAULT_STORAGE_PATH));
         assert_eq!(sd.set_from_csv(&csv), Err(SerializationError::TimestampRead));
     }
 }

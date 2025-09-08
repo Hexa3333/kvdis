@@ -1,6 +1,6 @@
-use std::{collections::HashMap, sync::{Arc, Mutex}, thread, time::{Duration, SystemTime}};
+use std::{collections::HashMap, path::PathBuf, sync::{Arc, Mutex}, thread, time::{Duration, SystemTime}};
 
-use crate::{command::{Command, CommandResult}, errors::{DictionaryError}, persistence::Serializer};
+use crate::{command::{Command, CommandResult}, errors::DictionaryError, persistence::{Serializer, DEFAULT_STORAGE_PATH}};
 
 #[derive(Debug)]
 pub struct Entry {
@@ -58,11 +58,11 @@ impl Dictionary {
                 Ok(CommandResult::Clear)
             },
             Save => {
-                self.save();
+                self.save(PathBuf::from(DEFAULT_STORAGE_PATH));
                 Ok(CommandResult::Save)
             },
             Load => {
-                self.load();
+                self.load(PathBuf::from(DEFAULT_STORAGE_PATH));
                 Ok(CommandResult::Load)
             }
         }
@@ -178,16 +178,16 @@ impl Dictionary {
         guard.clear();
     }
 
-    pub fn save(&self) {
-        let serializer = Serializer::new(&self);
+    pub fn save(&self, path: PathBuf) {
+        let serializer = Serializer::new(&self, path);
         thread::spawn(move || {
             // TODO: error handling
             serializer.save_file_csv().unwrap();
         });
     }
 
-    pub fn load(&self) {
-        let mut serializer = Serializer::new(&self);
+    pub fn load(&self, path: PathBuf) {
+        let mut serializer = Serializer::new(&self, path);
         thread::spawn(move || {
             // TODO: error handling
             serializer.load_file_csv().unwrap();
